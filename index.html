@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAS302 ARCADE — 3D Animation Studies 2 Learning Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+  :root{
+    --screen:#0b0b1e;
+    --panel:#14142b;
+    --panel2:#1c1c3a;
+    --ink:#e8e8ff;
+    --dim:#8a8ab8;
+    --coin:#ffd23f;
+    --magenta:#ff3864;
+    --cyan:#2de2e6;
+    --green:#3bf57a;
+    --purple:#7f5af0;
+    --orange:#ff8e3c;
+    --cart:#2a2a4a;
+    --cart-edge:#3d3d63;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--screen);
+    color:var(--ink);
+    font-family:'VT323',monospace;
+    font-size:22px;
+    line-height:1.4;
+    image-rendering:pixelated;
+    overflow-x:hidden;
+  }
+  /* ---------- CRT scanlines ---------- */
+  body::after{
+    content:"";
+    position:fixed;inset:0;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+    pointer-events:none;z-index:9999;
+    mix-blend-mode:multiply;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  .px{font-family:'Press Start 2P',monospace}
+  /* ---------- pixel border helper ---------- */
+  .pixel-box{
+    border:4px solid var(--ink);
+    box-shadow:0 0 0 4px var(--screen), 0 0 0 8px var(--cart-edge), 8px 8px 0 8px rgba(0,0,0,.55);
+  }
+  /* ---------- header / marquee ---------- */
+  header{
+    background:linear-gradient(180deg,#1a1038 0%, #0e0a24 100%);
+    border-bottom:6px solid var(--coin);
+    padding:34px 16px 26px;
+    text-align:center;
+    position:relative;
+  }
+  header::before{
+    content:"";
+    position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 15% 30%, rgba(45,226,230,.14), transparent 32%),
+      radial-gradient(circle at 85% 25%, rgba(255,56,100,.14), transparent 32%);
+    pointer-events:none;
+  }
+  .marquee-tag{
+    display:inline-block;
+    font-family:'Press Start 2P',monospace;
+    font-size:10px;color:var(--screen);
+    background:var(--coin);
+    padding:6px 12px;
+    letter-spacing:1px;
+    margin-bottom:18px;
+    box-shadow:4px 4px 0 rgba(0,0,0,.5);
+  }
+  .logo-frame{
+    display:inline-block;
+    background:#fff;
+    padding:10px 18px;
+    border:4px solid var(--ink);
+    box-shadow:0 0 0 4px var(--screen), 0 0 0 8px var(--cart-edge), 6px 6px 0 8px rgba(0,0,0,.55);
+    margin-bottom:20px;
+  }
+  .logo-frame img{display:block;height:64px;width:auto;image-rendering:auto}
+  /* ---------- mission briefing (about + CLO) ---------- */
+  .briefing{max-width:1100px;margin:36px auto 0;padding:0 16px}
+  .briefing-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:26px}
+  @media(max-width:820px){.briefing-grid{grid-template-columns:1fr}}
+  .brief-card{
+    background:var(--panel);
+    border:4px solid var(--cart-edge);
+    box-shadow:8px 8px 0 rgba(0,0,0,.55);
+    padding:22px;
+  }
+  .brief-card h2{
+    font-family:'Press Start 2P',monospace;
+    font-size:12px;color:var(--coin);
+    margin-bottom:16px;letter-spacing:1px;
+  }
+  .brief-card p{color:var(--ink);font-size:22px;margin-bottom:12px}
+  .brief-card p.dim{color:var(--dim)}
+  .stat-rows{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .stat-row{
+    display:flex;justify-content:space-between;gap:12px;
+    border-bottom:2px dashed var(--cart-edge);padding-bottom:6px;
+    font-size:21px;
+  }
+  .stat-row .k{color:var(--dim)}
+  .stat-row .v{color:var(--cyan);text-align:right}
+  .clo-list{list-style:none;display:flex;flex-direction:column;gap:12px}
+  .clo-list li{
+    background:var(--panel2);
+    border-left:8px solid var(--cyan);
+    padding:10px 14px;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .clo-list li:nth-child(2){border-color:var(--green)}
+  .clo-list li:nth-child(3){border-color:var(--magenta)}
+  .clo-list li:nth-child(4){border-color:var(--purple)}
+  .clo-list li:nth-child(5){border-color:var(--orange)}
+  .clo-list .clo-id{
+    font-family:'Press Start 2P',monospace;font-size:9px;color:var(--coin);
+  }
+  .clo-list .clo-text{font-size:22px;color:var(--ink)}
+  .clo-list .clo-bloom{font-size:18px;color:var(--dim)}
+  /* ---------- case file ---------- */
+  .case-file{
+    margin-top:26px;
+    background:var(--panel);
+    border:4px dashed var(--cyan);
+    padding:20px 22px;
+    box-shadow:8px 8px 0 rgba(0,0,0,.55);
+  }
+  .case-file .cf-tag{
+    font-family:'Press Start 2P',monospace;font-size:10px;
+    color:var(--cyan);margin-bottom:10px;letter-spacing:1px;
+  }
+  .case-file h4{
+    font-family:'Press Start 2P',monospace;font-size:11px;
+    color:var(--ink);margin-bottom:12px;line-height:1.8;
+  }
+  .case-file p{font-size:21px;color:var(--dim);margin-bottom:10px}
+  .case-file ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+  .case-file ul li{font-size:21px;color:var(--ink)}
+  .case-file ul li::before{content:"► ";color:var(--coin)}
+  h1{
+    font-family:'Press Start 2P',monospace;
+    font-size:clamp(20px,4.4vw,42px);
+    letter-spacing:2px;
+    color:var(--coin);
+    text-shadow:3px 3px 0 var(--magenta), 6px 6px 0 rgba(0,0,0,.6);
+    margin-bottom:14px;
+  }
+  .subtitle{
+    font-family:'Press Start 2P',monospace;
+    font-size:clamp(9px,1.6vw,13px);
+    color:var(--cyan);
+    letter-spacing:1px;
+    margin-bottom:20px;
+  }
+  .press-start{
+    font-family:'Press Start 2P',monospace;
+    font-size:12px;color:var(--ink);
+    animation:blink 1.1s steps(2,start) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  /* ---------- HUD score bar ---------- */
+  .hud{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:14px;
+    background:#000;
+    border-top:4px solid var(--cart-edge);
+    border-bottom:4px solid var(--cart-edge);
+    padding:12px 10px;
+    font-family:'Press Start 2P',monospace;
+    font-size:10px;
+    position:sticky;top:0;z-index:100;
+  }
+  .hud span b{color:var(--coin)}
+  .hud .hud-item{padding:4px 10px}
+  .hud .score{color:var(--green)}
+  /* ---------- level select ---------- */
+  .level-select{
+    max-width:1100px;margin:34px auto 10px;padding:0 16px;
+    text-align:center;
+  }
+  .level-select h2{
+    font-family:'Press Start 2P',monospace;
+    font-size:14px;color:var(--dim);
+    margin-bottom:18px;letter-spacing:2px;
+  }
+  .tabs{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+  .tab-btn{
+    font-family:'Press Start 2P',monospace;
+    font-size:10px;
+    background:var(--cart);
+    color:var(--ink);
+    border:4px solid var(--cart-edge);
+    padding:14px 12px 12px;
+    cursor:pointer;
+    min-width:130px;
+    box-shadow:0 6px 0 #000;
+    transition:transform .05s;
+    position:relative;
+  }
+  .tab-btn small{display:block;margin-top:8px;font-size:8px;color:var(--dim)}
+  .tab-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+  .tab-btn:focus-visible{outline:3px dashed var(--coin);outline-offset:3px}
+  .tab-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #000}
+  .tab-btn.active{
+    background:var(--coin);color:var(--screen);
+    border-color:#fff;
+    box-shadow:0 6px 0 var(--magenta);
+  }
+  .tab-btn.active small{color:#5a4300}
+  .tab-btn .done-flag{
+    position:absolute;top:-10px;right:-8px;
+    background:var(--green);color:#00320f;
+    font-size:8px;padding:3px 5px;display:none;
+    border:2px solid #fff;
+  }
+  /* ---------- stage panels ---------- */
+  .stage{max-width:1100px;margin:30px auto 60px;padding:0 16px}
+  .panel{display:none;animation:appear .25s steps(4)}
+  .panel.active{display:block}
+  @keyframes appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .level-head{
+    background:var(--panel);
+    padding:22px 22px 18px;
+    margin-bottom:26px;
+    border-left:10px solid var(--lvl,var(--cyan));
+    box-shadow:6px 6px 0 rgba(0,0,0,.5);
+  }
+  .level-head .lvl-tag{
+    font-family:'Press Start 2P',monospace;
+    font-size:10px;color:var(--screen);
+    background:var(--lvl,var(--cyan));
+    display:inline-block;padding:5px 10px;margin-bottom:12px;
+  }
+  .level-head h3{
+    font-family:'Press Start 2P',monospace;
+    font-size:clamp(13px,2.4vw,20px);
+    color:var(--ink);margin-bottom:12px;line-height:1.6;
+  }
+  .level-head p{color:var(--dim);font-size:23px;max-width:900px}
+  .objectives{
+    display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;
+  }
+  .obj-chip{
+    font-size:19px;color:var(--ink);
+    background:var(--panel2);
+    border:2px solid var(--cart-edge);
+    padding:4px 12px;
+  }
+  .obj-chip.clo{border-color:var(--lvl,var(--cyan));color:var(--lvl,var(--cyan))}
+  /* ---------- progress bar ---------- */
+  .power{
+    margin:0 0 24px;
+    font-family:'Press Start 2P',monospace;font-size:9px;color:var(--dim);
+  }
+  .power .bar{
+    height:22px;margin-top:8px;
+    background:#000;border:3px solid var(--cart-edge);
+    display:flex;gap:4px;padding:3px;
+  }
+  .power .cell{flex:1;background:#1a1a33}
+  .power .cell.fill{background:var(--lvl,var(--cyan));box-shadow:0 0 8px var(--lvl,var(--cyan))}
+  /* ---------- cartridge grid ---------- */
+  .cart-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:26px;
+  }
+  .cartridge{
+    background:var(--cart);
+    border:4px solid var(--cart-edge);
+    box-shadow:8px 8px 0 rgba(0,0,0,.55);
+    display:flex;flex-direction:column;
+    text-decoration:none;color:var(--ink);
+    transition:transform .08s;
+    position:relative;
+  }
+  .cartridge:hover{transform:translate(-3px,-3px);box-shadow:11px 11px 0 rgba(0,0,0,.55);border-color:var(--lvl,var(--cyan))}
+  .cartridge:focus-visible{outline:3px dashed var(--coin);outline-offset:4px}
+  .cart-top{
+    height:14px;background:repeating-linear-gradient(90deg,var(--cart-edge) 0 10px, var(--cart) 10px 20px);
+    border-bottom:4px solid var(--cart-edge);
+  }
+  .cart-label{
+    background:var(--lvl,var(--cyan));
+    color:var(--screen);
+    padding:12px 14px;
+    min-height:96px;
+    display:flex;flex-direction:column;justify-content:center;
+  }
+  .cart-label .vid-no{
+    font-family:'Press Start 2P',monospace;font-size:8px;opacity:.75;margin-bottom:8px;
+  }
+  .cart-label .vid-title{
+    font-family:'Press Start 2P',monospace;font-size:10px;line-height:1.7;
+  }
+  .cart-body{padding:14px 14px 16px;flex:1;display:flex;flex-direction:column;gap:8px}
+  .cart-body .channel{color:var(--cyan);font-size:20px}
+  .cart-body .desc{color:var(--dim);font-size:19px;flex:1}
+  .cart-meta{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{
+    font-family:'Press Start 2P',monospace;font-size:8px;
+    padding:4px 7px;border:2px solid var(--cart-edge);color:var(--dim);
+  }
+  .badge.year{border-color:var(--coin);color:var(--coin)}
+  .badge.ver{border-color:var(--green);color:var(--green)}
+  .play-row{
+    display:flex;align-items:center;justify-content:space-between;
+    border-top:3px dashed var(--cart-edge);
+    padding-top:10px;margin-top:4px;
+  }
+  .play-row .play{
+    font-family:'Press Start 2P',monospace;font-size:9px;color:var(--coin);
+  }
+  .play-row .play::before{content:"▶ "}
+  .watched-stamp{
+    display:none;
+    font-family:'Press Start 2P',monospace;font-size:8px;
+    color:var(--green);
+  }
+  .cartridge.watched{border-color:var(--green)}
+  .cartridge.watched .watched-stamp{display:inline}
+  /* ---------- boss quest ---------- */
+  .boss{
+    margin-top:30px;
+    background:linear-gradient(135deg,#241033,#141428);
+    border:4px solid var(--magenta);
+    padding:20px 22px;
+    box-shadow:8px 8px 0 rgba(0,0,0,.55);
+  }
+  .boss .boss-tag{
+    font-family:'Press Start 2P',monospace;font-size:10px;
+    color:var(--magenta);margin-bottom:12px;letter-spacing:1px;
+  }
+  .boss p{font-size:22px;color:var(--ink)}
+  .boss p b{color:var(--coin)}
+  /* ---------- footer ---------- */
+  footer{
+    border-top:6px solid var(--cart-edge);
+    background:#000;
+    text-align:center;
+    padding:30px 16px 40px;
+    color:var(--dim);
+  }
+  footer .px{font-size:9px;letter-spacing:1px;line-height:2.2}
+  footer .coin{color:var(--coin)}
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(120px);
+    background:var(--green);color:#00320f;
+    font-family:'Press Start 2P',monospace;font-size:10px;
+    padding:12px 18px;border:3px solid #fff;
+    box-shadow:6px 6px 0 rgba(0,0,0,.6);
+    transition:transform .2s;z-index:10000;
+  }
+  #toast.show{transform:translateX(-50%) translateY(0)}
+  @media(max-width:560px){
+    body{font-size:20px}
+    .tab-btn{min-width:100px;font-size:9px}
+    .hud{font-size:8px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-frame"><img src="data:image/png;base64,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" alt="Asia e University logo"></div>
+  <br>
+  <span class="marquee-tag">CAS302 • 3D ANIMATION STUDIES 2</span>
+  <h1>BLENDER QUEST</h1>
+  <p class="subtitle">6-WEEK LEARNING GUIDE • BLENDER 4.5 LTS • SEMESTER 6 YEAR 2</p>
+  <p class="press-start">▼ SELECT A LEVEL TO BEGIN ▼</p>
+</header>
+
+<div class="hud">
+  <span class="hud-item">PLAYER 1 <b>STUDENT</b></span>
+  <span class="hud-item score">SCORE <b id="score">0000</b></span>
+  <span class="hud-item">VIDEOS <b><span id="watched-count">0</span>/24</b></span>
+  <span class="hud-item">ENGINE <b>BLENDER 4.5+</b></span>
+  <span class="hud-item">LECTURER <b>MOHD FAIZ ALIAS</b></span>
+</div>
+
+<section class="briefing" aria-label="About this subject">
+  <div class="briefing-grid">
+    <div class="brief-card">
+      <h2>▣ MISSION BRIEFING — ABOUT THIS SUBJECT</h2>
+      <p><b style="color:var(--coin)">CAS302 – 3D Animation Studies 2</b> takes you deeper into the world of 3D motion. Across 6 weeks you will explore physics and motion in 3D, camera and object animation, 3D motion graphics and animated typography, visual effects, and rendering with basic compositing — all in <b style="color:var(--green)">Blender 4.5 LTS and above</b>.</p>
+      <p class="dim">The course builds practical production skills and critical understanding of how animated imagery is created, shared and sold in today's visual economy — preparing you for employment or further study.</p>
+      <div class="stat-rows">
+        <div class="stat-row"><span class="k">COURSE CODE</span><span class="v">CAS302</span></div>
+        <div class="stat-row"><span class="k">SEMESTER / YEAR</span><span class="v">SEMESTER 6 • YEAR 2</span></div>
+        <div class="stat-row"><span class="k">CREDIT VALUE</span><span class="v">3 CREDITS</span></div>
+        <div class="stat-row"><span class="k">LECTURER</span><span class="v">MOHD FAIZ ALIAS</span></div>
+        <div class="stat-row"><span class="k">SOFTWARE</span><span class="v">BLENDER 4.5+</span></div>
+        <div class="stat-row"><span class="k">ASSESSMENTS</span><span class="v">PART A 30% • PART B 40% • FINAL 30%</span></div>
+      </div>
+    </div>
+    <div class="brief-card">
+      <h2>▣ LEARNING OUTCOMES — YOUR SKILL TREE</h2>
+      <p class="dim">By the end of this quest, you will be able to:</p>
+      <ul class="clo-list">
+        <li><span class="clo-id">CLO1 • UNLOCKED AT LEVEL 1–2</span><span class="clo-text">Identify 3D motion</span><span class="clo-bloom">Cognitive — C1 Remembering</span></li>
+        <li><span class="clo-id">CLO2 • UNLOCKED AT LEVEL 3</span><span class="clo-text">Discuss 3D object animation</span><span class="clo-bloom">Cognitive — C2 Understanding</span></li>
+        <li><span class="clo-id">CLO3 • UNLOCKED AT LEVEL 5</span><span class="clo-text">Demonstrate 3D visual effects</span><span class="clo-bloom">Psychomotor — P3 Guided Response</span></li>
+        <li><span class="clo-id">CLO4 • UNLOCKED AT LEVEL 4</span><span class="clo-text">Formulate 3D motion graphic</span><span class="clo-bloom">Cognitive — C6 Creating</span></li>
+        <li><span class="clo-id">CLO5 • UNLOCKED AT LEVEL 6</span><span class="clo-text">Produce animation project</span><span class="clo-bloom">Psychomotor — P4/P5 Production</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<nav class="level-select" aria-label="Week navigation">
+  <h2>— LEVEL SELECT —</h2>
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" data-week="1" role="tab" aria-selected="true">LEVEL 1<small>INTRO TO BLENDER</small><span class="done-flag">CLEAR!</span></button>
+    <button class="tab-btn" data-week="2" role="tab" aria-selected="false">LEVEL 2<small>CAMERA ANIMATION</small><span class="done-flag">CLEAR!</span></button>
+    <button class="tab-btn" data-week="3" role="tab" aria-selected="false">LEVEL 3<small>OBJECT ANIMATION</small><span class="done-flag">CLEAR!</span></button>
+    <button class="tab-btn" data-week="4" role="tab" aria-selected="false">LEVEL 4<small>MOTION GRAPHICS</small><span class="done-flag">CLEAR!</span></button>
+    <button class="tab-btn" data-week="5" role="tab" aria-selected="false">LEVEL 5<small>VISUAL EFFECTS</small><span class="done-flag">CLEAR!</span></button>
+    <button class="tab-btn" data-week="6" role="tab" aria-selected="false">LEVEL 6<small>RENDER + COMPOSITE</small><span class="done-flag">CLEAR!</span></button>
+  </div>
+</nav>
+
+<main class="stage">
+
+  <!-- ============ LEVEL 1 ============ -->
+  <section class="panel active" data-week="1" style="--lvl:var(--cyan)">
+    <div class="level-head">
+      <span class="lvl-tag">WEEK 1 — TUTORIAL STAGE</span>
+      <h3>INTRODUCTION TO BLENDER</h3>
+      <p>Boot up the engine. Learn the Blender 4.5 interface, viewport navigation, objects and transforms, and set your very first keyframes. Every hero starts at the default cube.</p>
+      <div class="objectives">
+        <span class="obj-chip clo">CLO1 • IDENTIFY 3D MOTION</span>
+        <span class="obj-chip">Interface & navigation</span>
+        <span class="obj-chip">Move / Rotate / Scale</span>
+        <span class="obj-chip">Timeline & first keyframes</span>
+      </div>
+    </div>
+    <div class="power">LEVEL PROGRESS<div class="bar"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div></div>
+    <div class="cart-grid">
+      <a class="cartridge" href="https://www.youtube.com/watch?v=Ci3Has4L5W4" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 1-1</span><span class="vid-title">BLENDER TUTORIAL FOR BEGINNERS</span></div>
+        <div class="cart-body">
+          <span class="channel">Blender Guru–style walkthrough</span>
+          <span class="desc">Fundamentals of Blender while creating your first simple scene — the perfect first boot.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.x</span><span class="badge">BEGINNER</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=r6ZQil-zd5Y" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 1-2</span><span class="vid-title">FULL BLENDER 4 COURSE FOR COMPLETE BEGINNERS</span></div>
+        <div class="cart-body">
+          <span class="channel">Polygon Runway</span>
+          <span class="desc">A free in-depth beginner course covering all the core concepts of Blender 4 step by step.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.x</span><span class="badge">FULL COURSE</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=peSv5IT5Ve4" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 1-3</span><span class="vid-title">ABSOLUTE BEGINNER BASICS 2025</span></div>
+        <div class="cart-body">
+          <span class="channel">RoBuilder</span>
+          <span class="desc">Blender for total noobs — navigation, shortcuts and the mindset to survive your first week.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.x</span><span class="badge">BEGINNER</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=xACMr9nFELU" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 1-4</span><span class="vid-title">THE BASICS OF ANIMATION & KEYFRAMES</span></div>
+        <div class="cart-body">
+          <span class="channel">Ryan King Art</span>
+          <span class="desc">Your very first keyframes: timeline, auto-key, interpolation, and previewing motion.</span>
+          <div class="cart-meta"><span class="badge year">2024</span><span class="badge ver">4.x</span><span class="badge">KEYFRAMES</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+    </div>
+    <div class="case-file">
+      <p class="cf-tag">◈ CASE FILE 01</p>
+      <h4>BLENDER OPEN MOVIES — HOW A FREE TOOL POWERS REAL STUDIOS</h4>
+      <p>Blender Studio has produced open short films such as <i>Spring</i>, <i>Sprite Fright</i> and <i>Charge</i> entirely in Blender, releasing all production files publicly. These projects prove that the same free software you are learning is used in professional pipelines.</p>
+      <ul>
+        <li>Watch one Blender open movie and list three types of 3D motion you can identify in it (CLO1).</li>
+        <li>Explore the released .blend production files — how are scenes and collections organised?</li>
+        <li>Discuss: why does file/folder organisation matter from day one of a production?</li>
+      </ul>
+    </div>
+    <div class="boss">
+      <p class="boss-tag">★ BOSS QUEST — WEEK 1</p>
+      <p>Animate the default cube: make it <b>slide, spin and jump</b> over 120 frames using location, rotation and scale keyframes. Save your first <b>.blend</b> file with a proper folder structure.</p>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL 2 ============ -->
+  <section class="panel" data-week="2" style="--lvl:var(--green)">
+    <div class="level-head">
+      <span class="lvl-tag">WEEK 2 — STAGE 2</span>
+      <h3>CAMERA ANIMATION</h3>
+      <p>Take control of the lens. Learn to frame shots, keyframe camera moves, follow paths for smooth dollies and orbits, and cut between cameras like a director.</p>
+      <div class="objectives">
+        <span class="obj-chip clo">CLO1 • IDENTIFY 3D MOTION</span>
+        <span class="obj-chip">Camera framing & focal length</span>
+        <span class="obj-chip">Follow Path + Track To</span>
+        <span class="obj-chip">Camera switching / binding</span>
+      </div>
+    </div>
+    <div class="power">LEVEL PROGRESS<div class="bar"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div></div>
+    <div class="cart-grid">
+      <a class="cartridge" href="https://www.youtube.com/watch?v=nJgsdatJCM4" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 2-1</span><span class="vid-title">SWITCH CAMERA ANGLES DURING AN ANIMATION</span></div>
+        <div class="cart-body">
+          <span class="channel">Ryan King Art</span>
+          <span class="desc">Use markers and camera binding to cut between multiple cameras mid-animation.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.x</span><span class="badge">EDITING</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=COwENnPwWJ8" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 2-2</span><span class="vid-title">ANIMATE CAMERAS LIKE A PRO</span></div>
+        <div class="cart-body">
+          <span class="channel">CG Boost (Zach Reinhardt)</span>
+          <span class="desc">Precise camera animation so your camera behaves exactly the way you want it to.</span>
+          <div class="cart-meta"><span class="badge ver">EVERGREEN</span><span class="badge">TECHNIQUE</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=nbpADE16QX4" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 2-3</span><span class="vid-title">BLENDER ANIMATED CAMERA — BEGINNER CGI</span></div>
+        <div class="cart-body">
+          <span class="channel">Beginner CGI course</span>
+          <span class="desc">Camera movements, framing tips and tricks for your first cinematic shots.</span>
+          <div class="cart-meta"><span class="badge year">2024</span><span class="badge ver">4.x</span><span class="badge">BEGINNER</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=a7qyW1G350g" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 2-4</span><span class="vid-title">QUICK SMOOTH CAMERA MOVEMENTS</span></div>
+        <div class="cart-body">
+          <span class="channel">Steadicam-style workflow</span>
+          <span class="desc">A fast method for smooth, steadicam-like camera motion used by pros all the time.</span>
+          <div class="cart-meta"><span class="badge ver">EVERGREEN</span><span class="badge">SMOOTH MOVES</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+    </div>
+    <div class="case-file">
+      <p class="cf-tag">◈ CASE FILE 02</p>
+      <h4>THE ONE-SHOT ILLUSION — CONTINUOUS CAMERA IN FILM & GAMES</h4>
+      <p>Films like <i>1917</i> and games like <i>God of War</i> (2018) famously use "one-shot" continuous camera movement to pull the audience through the story without visible cuts. Virtual cameras make this achievable in 3D animation in ways real cameras never could.</p>
+      <ul>
+        <li>Study a one-shot sequence: where does the camera dolly, orbit, and push in — and why?</li>
+        <li>Identify moments where the camera motion hides what would have been a cut (CLO1).</li>
+        <li>Discuss: when is a cut stronger than a continuous move? Find one example of each.</li>
+      </ul>
+    </div>
+    <div class="boss">
+      <p class="boss-tag">★ BOSS QUEST — WEEK 2</p>
+      <p>Build a small scene and film it with a <b>3-shot camera sequence</b>: one orbit (Follow Path), one push-in, and one cut to a second camera using markers. Minimum 10 seconds.</p>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL 3 ============ -->
+  <section class="panel" data-week="3" style="--lvl:var(--orange)">
+    <div class="level-head">
+      <span class="lvl-tag">WEEK 3 — STAGE 3</span>
+      <h3>OBJECT ANIMATION & PHYSICS</h3>
+      <p>Make objects come alive. Master keyframes and the Graph Editor for timing and easing, then let the physics engine take over with rigid body dynamics and chain reactions.</p>
+      <div class="objectives">
+        <span class="obj-chip clo">CLO2 • DISCUSS 3D OBJECT ANIMATION</span>
+        <span class="obj-chip">Graph Editor & easing</span>
+        <span class="obj-chip">Rigid body active/passive</span>
+        <span class="obj-chip">Chain reactions & baking</span>
+      </div>
+    </div>
+    <div class="power">LEVEL PROGRESS<div class="bar"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div></div>
+    <div class="cart-grid">
+      <a class="cartridge" href="https://www.youtube.com/watch?v=AO2rHyEiHLY" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 3-1</span><span class="vid-title">BASIC KEYFRAME ANIMATION (BEGINNER FRIENDLY)</span></div>
+        <div class="cart-body">
+          <span class="channel">SouthernShotty</span>
+          <span class="desc">Total-beginner keyframe animation using the free Rain rig — timing and spacing in action.</span>
+          <div class="cart-meta"><span class="badge year">2024</span><span class="badge ver">4.x</span><span class="badge">KEYFRAMES</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=lctjzasiy64" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 3-2</span><span class="vid-title">RIGID BODY PHYSICS FOR BEGINNERS</span></div>
+        <div class="cart-body">
+          <span class="channel">Ryan King Art</span>
+          <span class="desc">Active vs passive bodies, mass, friction and collisions — the foundation of physics animation.</span>
+          <div class="cart-meta"><span class="badge ver">EVERGREEN</span><span class="badge">PHYSICS</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=H-HktU-aEaI" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 3-3</span><span class="vid-title">CHAIN LINKS SIMULATION — RIGID BODY</span></div>
+        <div class="cart-body">
+          <span class="channel">Ryan King Art</span>
+          <span class="desc">Build a chain-link simulation and learn how constrained bodies interact realistically.</span>
+          <div class="cart-meta"><span class="badge year">2024</span><span class="badge ver">4.x</span><span class="badge">SIMULATION</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=kqp4QzLroNQ" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 3-4</span><span class="vid-title">RIGID BODY, COLLISION & PHYSICS FOR COMPLETE BEGINNERS</span></div>
+        <div class="cart-body">
+          <span class="channel">Beginner physics walkthrough</span>
+          <span class="desc">Apply collision and rigid body physics step by step in a simple destruction scene.</span>
+          <div class="cart-meta"><span class="badge year">2024</span><span class="badge ver">4.x</span><span class="badge">PHYSICS</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+    </div>
+    <div class="case-file">
+      <p class="cf-tag">◈ CASE FILE 03</p>
+      <h4>CHAIN REACTIONS — OK GO'S RUBE GOLDBERG MACHINE</h4>
+      <p>OK Go's music video <i>This Too Shall Pass</i> features a giant real-world Rube Goldberg machine — a masterclass in cause-and-effect timing. In 3D, rigid body simulation lets you build the same chain reactions digitally, with full control over mass, friction and momentum.</p>
+      <ul>
+        <li>Watch the chain reaction: identify five moments of energy transfer between objects (CLO2).</li>
+        <li>Which parts would be easy in Blender's rigid body system, and which would need keyframed "cheats"?</li>
+        <li>Discuss: why does slightly imperfect motion feel more believable than perfect motion?</li>
+      </ul>
+    </div>
+    <div class="boss">
+      <p class="boss-tag">★ BOSS QUEST — WEEK 3</p>
+      <p>Create a <b>domino chain reaction</b>: at least 20 dominoes, one trigger object, correct active/passive setup, baked simulation, and polished easing on any keyframed motion. This is your warm-up for <b>Assignment 1 Part B</b>.</p>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL 4 ============ -->
+  <section class="panel" data-week="4" style="--lvl:var(--purple)">
+    <div class="level-head">
+      <span class="lvl-tag">WEEK 4 — STAGE 4</span>
+      <h3>3D MOTION GRAPHICS & TYPOGRAPHY</h3>
+      <p>Design in motion. Animate 3D text, build looping motion design pieces, and learn the roadmap of motion graphics in Blender — the core skill of your Final Project title animation.</p>
+      <div class="objectives">
+        <span class="obj-chip clo">CLO4 • FORMULATE 3D MOTION GRAPHIC</span>
+        <span class="obj-chip">Text objects & bevels</span>
+        <span class="obj-chip">Timing, easing, loops</span>
+        <span class="obj-chip">Title sequence design</span>
+      </div>
+    </div>
+    <div class="power">LEVEL PROGRESS<div class="bar"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div></div>
+    <div class="cart-grid">
+      <a class="cartridge" href="https://www.youtube.com/watch?v=7yCBpdNeOnk" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 4-1</span><span class="vid-title">HOW TO LEARN MOTION GRAPHICS IN BLENDER 2025!</span></div>
+        <div class="cart-body">
+          <span class="channel">Motion design roadmap</span>
+          <span class="desc">A free roadmap for learning motion graphics in Blender — what to learn and in what order.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.x</span><span class="badge">ROADMAP</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=dzq4byOD4Ug" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 4-2</span><span class="vid-title">EASY CINEMATIC TEXT ANIMATION</span></div>
+        <div class="cart-body">
+          <span class="channel">Ducky 3D</span>
+          <span class="desc">Cinematic text animation with UV tricks and a custom camera rig for extra flair.</span>
+          <div class="cart-meta"><span class="badge ver">EVERGREEN</span><span class="badge">TYPOGRAPHY</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=iWUJM9H_Nlg" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 4-3</span><span class="vid-title">3D SHINY TEXT ANIMATION</span></div>
+        <div class="cart-body">
+          <span class="channel">Blender + After Effects workflow</span>
+          <span class="desc">Create a shiny 3D text animation in Blender, then polish it with 2D motion graphics.</span>
+          <div class="cart-meta"><span class="badge year">2024</span><span class="badge ver">4.x</span><span class="badge">TYPE + COMP</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=T6v90zodabA" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 4-4</span><span class="vid-title">STOP MAKING BORING TEXT</span></div>
+        <div class="cart-body">
+          <span class="channel">Quick motion graphics tutorial</span>
+          <span class="desc">A stylized professional 3D text animation using the Simple Deform modifier — fast and punchy.</span>
+          <div class="cart-meta"><span class="badge ver">EVERGREEN</span><span class="badge">QUICK WIN</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+    </div>
+    <div class="case-file">
+      <p class="cf-tag">◈ CASE FILE 04</p>
+      <h4>TITLES THAT TELL STORIES — FROM SAUL BASS TO THE UN SDG CAMPAIGN</h4>
+      <p>Great title sequences — from Saul Bass's classic film openings to modern series intros — compress a whole story into seconds of moving type. The United Nations' SDG campaign materials show how motion graphics carry a global message through colour, icons and typography.</p>
+      <ul>
+        <li>Analyse one title sequence: how do type choice, timing and colour set the tone? (CLO4)</li>
+        <li>Study the official SDG colour system and icons — how would you translate one goal into motion?</li>
+        <li>Discuss: what makes a title card "resolve" feel satisfying at the end of a sequence?</li>
+      </ul>
+    </div>
+    <div class="boss">
+      <p class="boss-tag">★ BOSS QUEST — WEEK 4</p>
+      <p>Design a <b>10-second animated title card</b> for your favourite SDG: 3D text with bevels, one entrance animation, one camera move, refined in the Graph Editor. This becomes your <b>Final Project</b> style test.</p>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL 5 ============ -->
+  <section class="panel" data-week="5" style="--lvl:var(--magenta)">
+    <div class="level-head">
+      <span class="lvl-tag">WEEK 5 — STAGE 5</span>
+      <h3>3D VISUAL EFFECTS</h3>
+      <p>Unlock the special moves. Particle systems, glowing smoke, and morphing effects — everything you need to make your Assignment 1 Part B VFX shot look spectacular.</p>
+      <div class="objectives">
+        <span class="obj-chip clo">CLO3 • DEMONSTRATE 3D VISUAL EFFECTS</span>
+        <span class="obj-chip">Particle systems</span>
+        <span class="obj-chip">Smoke / Mantaflow</span>
+        <span class="obj-chip">Baking & caching</span>
+      </div>
+    </div>
+    <div class="power">LEVEL PROGRESS<div class="bar"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div></div>
+    <div class="cart-grid">
+      <a class="cartridge" href="https://www.youtube.com/watch?v=45HruJxNBcY" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 5-1</span><span class="vid-title">POWERFUL PARTICLE SYSTEMS IN BLENDER</span></div>
+        <div class="cart-body">
+          <span class="channel">Motion graphics & VFX particles</span>
+          <span class="desc">Build powerful, interesting particle systems used in mograph, environments and film VFX.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.5</span><span class="badge">PARTICLES</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=2Or8467vLoY" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 5-2</span><span class="vid-title">CREATE A GLOWING SMOKE SIMULATION</span></div>
+        <div class="cart-body">
+          <span class="channel">Blender Made Easy</span>
+          <span class="desc">Stunning glowing dual-colour smoke with Mantaflow — setup, materials and render.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.5</span><span class="badge">MANTAFLOW</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=CrOboutVHH8" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 5-3</span><span class="vid-title">BLENDER BEGINNER PARTICLES TUTORIAL</span></div>
+        <div class="cart-body">
+          <span class="channel">Bad Normals</span>
+          <span class="desc">Particles from zero: emitters, forces, and how to art-direct chaos into a beautiful shot.</span>
+          <div class="cart-meta"><span class="badge ver">EVERGREEN</span><span class="badge">PARTICLES</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=BwmkqHhpK3I" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 5-4</span><span class="vid-title">MORPHING PARTICLE VFX ANIMATION</span></div>
+        <div class="cart-body">
+          <span class="channel">3D illusions full tutorial</span>
+          <span class="desc">A crazy morphing particle VFX animation — advanced inspiration for your VFX shot.</span>
+          <div class="cart-meta"><span class="badge ver">EVERGREEN</span><span class="badge">ADVANCED</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+    </div>
+    <div class="case-file">
+      <p class="cf-tag">◈ CASE FILE 05</p>
+      <h4>ONE-PERSON VFX — IAN HUBERT'S DYNAMO DREAM</h4>
+      <p>Ian Hubert's <i>Dynamo Dream</i> series is a landmark of solo VFX production — feature-quality sci-fi worlds, particles, smoke and compositing built almost entirely in Blender by a tiny team. It shows what your Assignment 1 Part B techniques scale up to.</p>
+      <ul>
+        <li>Watch a Dynamo Dream episode or breakdown: spot three simulated effects (particles, smoke, dynamics) (CLO3).</li>
+        <li>How does compositing "glue" the CG elements to the footage? Look for grade, grain and glow.</li>
+        <li>Discuss: with limited render time, where would you spend your simulation budget in a 15-second shot?</li>
+      </ul>
+    </div>
+    <div class="boss">
+      <p class="boss-tag">★ BOSS QUEST — WEEK 5</p>
+      <p>Produce a <b>5-second VFX test shot</b> combining TWO techniques (e.g., particles + smoke, or rigid body + particles). Bake your caches properly. This directly feeds <b>Assignment 1 Part B</b>.</p>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL 6 ============ -->
+  <section class="panel" data-week="6" style="--lvl:var(--coin)">
+    <div class="level-head">
+      <span class="lvl-tag">WEEK 6 — FINAL STAGE</span>
+      <h3>RENDERING & BASIC COMPOSITING</h3>
+      <p>Finish the game. Choose between Eevee and Cycles, dial in render settings for 1080p output, then colour grade and polish your shots in the Blender 4.5 compositor.</p>
+      <div class="objectives">
+        <span class="obj-chip clo">CLO5 • PRODUCE ANIMATION PROJECT</span>
+        <span class="obj-chip">Eevee vs Cycles</span>
+        <span class="obj-chip">1080p / 24-25 fps output</span>
+        <span class="obj-chip">Compositor: grade + glow</span>
+      </div>
+    </div>
+    <div class="power">LEVEL PROGRESS<div class="bar"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div></div>
+    <div class="cart-grid">
+      <a class="cartridge" href="https://www.youtube.com/watch?v=EKb5G_Efunw" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 6-1</span><span class="vid-title">BEST CYCLES RENDER SETTINGS IN 3 MINUTES</span></div>
+        <div class="cart-body">
+          <span class="channel">Blender 4.5 quick guide</span>
+          <span class="desc">Which Cycles settings actually matter — samples, denoising and speed, explained fast.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.5</span><span class="badge">CYCLES</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=-gW6vk_OuNQ" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 6-2</span><span class="vid-title">HOW TO USE EEVEE — FULL BLENDER COURSE</span></div>
+        <div class="cart-body">
+          <span class="channel">Complete Eevee course</span>
+          <span class="desc">Understand the (almost) real-time Eevee engine from the ground up — perfect for mograph.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.x</span><span class="badge">EEVEE</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=vzbyoSbkc4Y" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 6-3</span><span class="vid-title">COLOR GRADING & COMPOSITING IN BLENDER 4.5</span></div>
+        <div class="cart-body">
+          <span class="channel">Spencer Magnusson</span>
+          <span class="desc">Comprehensive compositor walkthrough: exposure, colour balance, glare, fog, grain, vignette.</span>
+          <div class="cart-meta"><span class="badge year">2025</span><span class="badge ver">4.5</span><span class="badge">COMPOSITOR</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+      <a class="cartridge" href="https://www.youtube.com/watch?v=OF7WV9JZAJc" target="_blank" rel="noopener">
+        <div class="cart-top"></div>
+        <div class="cart-label"><span class="vid-no">CART 6-4</span><span class="vid-title">EEVEE NEXT-LEVEL RENDER SPEED SETTINGS</span></div>
+        <div class="cart-body">
+          <span class="channel">Render optimisation guide</span>
+          <span class="desc">Beginner-friendly settings to render fast without wrecking quality — deadline survival kit.</span>
+          <div class="cart-meta"><span class="badge ver">EVERGREEN</span><span class="badge">SPEED</span></div>
+          <div class="play-row"><span class="play">INSERT COIN</span><span class="watched-stamp">✔ CLEARED</span></div>
+        </div>
+      </a>
+    </div>
+    <div class="case-file">
+      <p class="cf-tag">◈ CASE FILE 06</p>
+      <h4>EEVEE VS CYCLES IN PRODUCTION — SPRITE FRIGHT & REAL-TIME MOGRAPH</h4>
+      <p>Blender Studio's <i>Sprite Fright</i> was rendered in Cycles for full path-traced quality, while much of today's commercial motion graphics ships straight out of Eevee for speed. Choosing an engine is a production decision: quality vs deadline vs style.</p>
+      <ul>
+        <li>Compare a Cycles frame and an Eevee frame of the same scene: list three visible differences (CLO5).</li>
+        <li>For your Final Project title animation, which engine fits your style and schedule — and why?</li>
+        <li>Discuss: how do denoising and sample counts change the render-time equation for a 60-second piece?</li>
+      </ul>
+    </div>
+    <div class="boss">
+      <p class="boss-tag">★ FINAL BOSS — WEEK 6</p>
+      <p>Render your Week 4 title card at <b>1920×1080, 24/25 fps, MP4 (H.264)</b> — once in Eevee, once in Cycles — then add a compositor grade with glow and vignette. Compare the results. <b>GAME COMPLETE:</b> you are ready for the Final Project.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p class="px"><span class="coin">ASIA e UNIVERSITY (AeU)</span><br>
+  CAS302 — 3D ANIMATION STUDIES 2<br>
+  BLENDER QUEST LEARNING GUIDE • BLENDER 4.5 LTS AND ABOVE<br>
+  ASSESSMENTS: PART A 30% • PART B 40% • FINAL PROJECT 30%<br>
+  © 2026 • INSERT COIN TO CONTINUE LEARNING</p>
+</footer>
+
+<div id="toast" role="status">+100 PTS! CARTRIDGE CLEARED</div>
+
+<script>
+$(function(){
+  // ------- tab navigation -------
+  $('.tab-btn').on('click', function(){
+    var wk = $(this).data('week');
+    $('.tab-btn').removeClass('active').attr('aria-selected','false');
+    $(this).addClass('active').attr('aria-selected','true');
+    $('.panel').removeClass('active');
+    $('.panel[data-week="'+wk+'"]').addClass('active');
+    $('html, body').stop().animate({scrollTop: $('.stage').offset().top - 90}, 250);
+  });
+
+  // keyboard: left/right arrows move between levels when a tab is focused
+  $('.tabs').on('keydown', '.tab-btn', function(e){
+    var btns = $('.tab-btn'), i = btns.index(this);
+    if(e.key === 'ArrowRight'){ btns.eq((i+1)%btns.length).trigger('click').trigger('focus'); }
+    if(e.key === 'ArrowLeft'){ btns.eq((i-1+btns.length)%btns.length).trigger('click').trigger('focus'); }
+  });
+
+  // ------- score / watched tracking (in-memory for this session) -------
+  var score = 0, watched = 0;
+
+  function updateHud(){
+    $('#score').text(String(score).padStart(4,'0'));
+    $('#watched-count').text(watched);
+  }
+
+  function updateLevelProgress($panel){
+    var total = $panel.find('.cartridge').length;
+    var done  = $panel.find('.cartridge.watched').length;
+    var cells = $panel.find('.power .cell');
+    cells.each(function(idx){
+      $(this).toggleClass('fill', idx < done);
+    });
+    if(done === total){
+      var wk = $panel.data('week');
+      $('.tab-btn[data-week="'+wk+'"] .done-flag').css('display','block');
+    }
+  }
+
+  $('.cartridge').on('click', function(){
+    var $c = $(this);
+    if(!$c.hasClass('watched')){
+      $c.addClass('watched');
+      score += 100; watched += 1;
+      updateHud();
+      updateLevelProgress($c.closest('.panel'));
+      var $t = $('#toast');
+      $t.addClass('show');
+      setTimeout(function(){ $t.removeClass('show'); }, 1600);
+    }
+    // link opens in new tab naturally via target="_blank"
+  });
+
+  updateHud();
+});
+</script>
+</body>
+</html>
