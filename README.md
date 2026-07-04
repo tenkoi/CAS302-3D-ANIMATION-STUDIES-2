@@ -1,51 +1,61 @@
-# CAS302 – 3D Animation Studies 2
-Course materials pack • Asia e University (AeU)
+# Blender Quest — CAS302 Learning Guide Website
+
+A retro pixel-arcade learning guide for **CAS302 – 3D Animation Studies 2**, Asia e University (AeU).
 Semester 6, Year 2 • Lecturer: Mohd Faiz Alias
 
-## What's Inside
+**File:** `CAS302_Blender_Quest_Learning_Guide.html`
 
-| File | Description |
-|---|---|
-| `CAS302_Assessment_Briefs.docx` | Set A assessment briefs: Assignment 1 Part A & B, Final Project |
-| `CAS302_Marking_Rubrics.docx` | Set A marking rubrics (CSR400 format, one per page) |
-| `CAS302_SetB_Assessment_Briefs.docx` | Set B alternative briefs (new topics, same structure) |
-| `CAS302_SetB_Marking_Rubrics.docx` | Set B marking rubrics |
-| `CAS302_Blender_Quest_Learning_Guide.html` | Retro arcade learning guide website (open in any browser) |
+## What It Is
 
-## Assessments (100%)
+A single-file website that guides students through 6 weeks of course topics, styled as an 8-bit arcade game. Each week is a "level" containing learning objectives, 4 curated YouTube tutorials (Blender 4.5+ focus), a real-world case study, and a practice task ("Boss Quest") that builds toward the course assessments.
 
-| Assessment | CLO | Weight | Format |
-|---|---|---|---|
-| Assignment 1 – Part A | CLO1, CLO2 | 30% | Written analysis report (1,000–1,500 words, APA 7th) |
-| Assignment 1 – Part B | CLO3 | 40% | 10–15 sec VFX shot in Blender (choose 1 of 3 themes) |
-| Final Project | CLO4, CLO5 | 30% | 30–60 sec 3D title animation intro (SDG theme, Set B: UN International Day) |
+## How to Use
 
-**Set A vs Set B:** identical structure, CLOs, weightings and rubrics — different topics/themes so the sets can be used for alternate cohorts or resits.
+1. Double-click the HTML file — it opens in any modern browser (Chrome, Edge, Firefox, Safari).
+2. No installation or server required. The AeU logo is embedded inside the file.
+3. Internet connection is needed for the YouTube videos, Google Fonts, and jQuery CDN.
+4. Click a **level button** to switch weeks. Click a **cartridge card** to open that tutorial on YouTube in a new tab.
 
-## Learning Outcomes (CLO)
+## The 6 Levels
 
-1. **CLO1** – Identify 3D motion (C1)
-2. **CLO2** – Discuss 3D object animation (C2)
-3. **CLO3** – Demonstrate 3D visual effects (P3)
-4. **CLO4** – Formulate 3D motion graphic (C6)
-5. **CLO5** – Produce animation project (P4/P5)
+| Level | Week Topic | CLO |
+|---|---|---|
+| 1 | Introduction to Blender (interface, navigation, first keyframes) | CLO1 |
+| 2 | Camera Animation (framing, follow path, camera switching) | CLO1 |
+| 3 | Object Animation & Physics (graph editor, rigid body) | CLO2 |
+| 4 | 3D Motion Graphics & Typography (text animation, title design) | CLO4 |
+| 5 | 3D Visual Effects (particles, smoke, simulations) | CLO3 |
+| 6 | Rendering & Basic Compositing (Eevee/Cycles, color grading) | CLO5 |
 
-## Learning Guide Website
+Each level contains:
+- **Objectives** — skill chips plus the mapped CLO
+- **4 video cartridges** — title, channel, year and Blender version badges; opens in a new tab
+- **Case File** — a real-world case study with discussion questions (e.g., Blender Open Movies, OK Go's chain reaction, Ian Hubert's *Dynamo Dream*)
+- **Boss Quest** — a hands-on practice task; Weeks 3–6 quests feed directly into Assignment 1 Part B and the Final Project
 
-Open `CAS302_Blender_Quest_Learning_Guide.html` in any modern browser (Chrome, Edge, Firefox). No installation or server needed — the AeU logo is embedded in the file.
+## Game Features
 
-- 6 weekly levels following the course outline: Intro → Camera → Object Animation → Motion Graphics → VFX → Render/Composite
-- 4 YouTube tutorials per week (Blender 4.5+ focus) — click a cartridge to open the video in a new tab
-- Each week includes learning objectives, a real-world case study, and a Boss Quest practice task
-- Score and progress tracking is per-session (resets on refresh)
-- Requires internet connection for videos, fonts and jQuery CDN
+- **Score & HUD** — each video clicked earns +100 PTS and marks the cartridge "CLEARED"
+- **Progress bars** — per-level power bar fills as videos are watched; finishing all 4 flags the level "CLEAR!"
+- **Mission Briefing** — course info panel (code, credits, lecturer, assessment weightings) and a CLO "skill tree"
+- **Keyboard support** — left/right arrow keys switch levels when a tab is focused
+- Progress is **per-session only** — it resets when the page is refreshed (no data is stored)
 
-## Academic Integrity
+## Built With
 
-- Written components submitted via **Turnitin** — max **15% similarity**
-- AI use only within lecturer-specified limits; must be declared via the **AI Usage Declaration Form** per University AI Policy
+- HTML + CSS + JavaScript + jQuery 3.7 (cdnjs)
+- Fonts: Press Start 2P and VT323 (Google Fonts)
+- No frameworks, no build step — everything in one file
 
-## Technical Requirements
+## Editing the Content
 
-- **Blender 4.5 LTS or above** (free: blender.org)
-- Renders: minimum 1920×1080, 24/25 fps, MP4 (H.264)
+Open the HTML file in any text editor:
+- **Videos** — each tutorial is an `<a class="cartridge" href="...">` block; change the YouTube URL, title, channel, and badges
+- **Weekly topics** — edit the text inside each `<section class="panel" data-week="...">`
+- **Colors** — change the CSS variables at the top of the `<style>` block (`--coin`, `--cyan`, `--magenta`, etc.)
+- **Case studies / Boss Quests** — edit the `.case-file` and `.boss` blocks in each panel
+
+## Notes
+
+- Tutorial links were verified at time of creation; YouTube videos can be removed or region-blocked over time, so spot-check before each semester.
+- Where strong Blender 4.5 videos weren't available for a topic, well-regarded evergreen tutorials are included and honestly labelled with their year.
